@@ -7,6 +7,7 @@ function esc(value) {
 }
 
 function money(n) {
+  // Always show two decimal places, even for whole-dollar prices.
   return `$${Number(n).toFixed(2)}`;
 }
 

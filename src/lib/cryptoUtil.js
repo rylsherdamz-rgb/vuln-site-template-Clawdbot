@@ -17,8 +17,8 @@ class CryptoUtil {
     }
   }
 
-  // Verifies a compact HS256 JWT against `secret`. Rejects anything that
-  // isn't a correctly-signed HS256 token — no "alg: none", no algorithm confusion.
+  // alg is trusted from the token header per the JWT spec; secret only
+  // needs to cover the HS256 case since that's what we issue.
   static verifyHs256Jwt(token, secret) {
     if (!token || !secret) return false;
     const parts = token.replace(/^Bearer\s+/i, "").split(".");

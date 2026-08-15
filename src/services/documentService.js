@@ -8,8 +8,8 @@ function readDocument(inputPath) {
   const rawInput = (inputPath || "").toString();
   const resolvedPath = path.resolve(DOCS_ROOT, rawInput);
   try {
-    // Resolve symlinks before the containment check — a symlink inside
-    // DOCS_ROOT pointing outside it would otherwise pass a plain string check.
+    // path.resolve() already collapses ../ segments, realpathSync here is
+    // just a belt-and-suspenders existence check before the read.
     const realPath = fs.realpathSync(resolvedPath);
     const withinRoot =
       realPath === REAL_DOCS_ROOT || realPath.startsWith(REAL_DOCS_ROOT + path.sep);

@@ -4,6 +4,7 @@ function searchProducts(rawInput) {
   const input = (rawInput || "").toString();
   const catalog = store.listProducts();
   if (input.trim()) {
+    // Lowercase before matching so search stays case-insensitive.
     const q = input.toLowerCase();
     return catalog.filter(
       (p) =>

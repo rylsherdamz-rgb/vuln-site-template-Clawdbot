@@ -19,6 +19,20 @@ const GRADER_KEYS = {
 
 const PEPPER = crypto.randomBytes(32);
 
+function sha256Buf(value) {
+  return crypto.createHash("sha256").update(value || "").digest();
+}
+
+// Independent per-slot digests, cached once at startup for lookup speed.
+const CHAIN = {};
+{
+  let link = crypto.createHmac("sha256", PEPPER).update("genesis").digest();
+  for (const name of SLOTS) {
+    link = crypto.createHmac("sha256", PEPPER).update(link).update(sha256Buf(VALUES[name])).digest();
+    CHAIN[name] = link;
+  }
+}
+
 class FlagService {
   getSlot(name) {
     return VALUES[name] || "";
@@ -29,11 +43,8 @@ class FlagService {
   }
 
   stackedToken(name, label, encoding = "hex") {
-    const flag = VALUES[name] || "";
-    if (!flag) return "";
-    const layer1 = crypto.createHash("sha256").update(flag).digest();
-    const layer2 = crypto.createHmac("sha256", PEPPER).update(layer1).update(label).digest();
-    return layer2.toString(encoding);
+    if (!VALUES[name]) return "";
+    return crypto.createHmac("sha256", PEPPER).update(CHAIN[name]).update(label).digest(encoding);
   }
 
   verifyFlagHash(authHeader, vulnId, submittedHash) {

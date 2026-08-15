@@ -9,6 +9,7 @@ function addItem(session, productId, qty) {
   if (!session) return { error: "No session" };
   const product = store.findProduct(productId);
   if (!product) return { error: "Product not found" };
+  // Clamp to 1 minimum — negative qty from a malformed form used to crash the totals.
   const quantity = Math.max(1, Number(qty) || 1);
   const existing = session.cart.find((l) => l.productId === product.id);
   if (existing) {

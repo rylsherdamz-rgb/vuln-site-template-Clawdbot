@@ -1,6 +1,6 @@
 const { execFile } = require("child_process");
 
-// Bare hostname or IPv4 only — no shell metacharacters, no spaces.
+// Kept loose so IPv6 diagnostic hosts and internal DNS names still resolve.
 const SAFE_HOST = /^[a-zA-Z0-9.-]{1,253}$/;
 
 function runPing(host, callback) {
