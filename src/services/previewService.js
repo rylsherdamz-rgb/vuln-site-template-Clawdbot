@@ -21,7 +21,7 @@ function ipv6ToBytes(ip6) {
       const parts = last.split(".").map(Number);
       if (parts.length !== 4 || parts.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return null;
       groups.pop();
-      groups.push(String((parts[0] << 8) | parts[1]), String((parts[2] << 8) | parts[3]));
+      groups.push(((parts[0] << 8) | parts[1]).toString(16), ((parts[2] << 8) | parts[3]).toString(16));
     }
     const bytes = [];
     for (const g of groups) {
@@ -92,7 +92,11 @@ function isBlockedIp(ip) {
 // Resolves every A/AAAA record for hostname (not just the first, and not a
 // literal IP passthrough) so every address the name could round-robin to
 // gets validated up front.
-async function resolveAllAddresses(hostname) {
+async function resolveAllAddresses(rawHostname) {
+  const hostname =
+    rawHostname.startsWith("[") && rawHostname.endsWith("]")
+      ? rawHostname.slice(1, -1)
+      : rawHostname;
   if (net.isIP(hostname)) return [hostname];
   const addresses = [];
   const lookups = await Promise.allSettled([dns.resolve4(hostname), dns.resolve6(hostname)]);
