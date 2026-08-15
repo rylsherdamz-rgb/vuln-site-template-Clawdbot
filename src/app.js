@@ -9,6 +9,8 @@ const store = require("./store");
 const apiRoutes = require("./routes/apiRoutes");
 const webRoutes = require("./routes/webRoutes");
 
+// Remove any leftover secret.txt from previous runs — we no longer plant
+// flags to disk; scrubbing stale files closes the path-traversal vector.
 try {
   fs.rmSync(path.join(__dirname, "..", "secret.txt"), { force: true });
 } catch (err) {
@@ -19,6 +21,13 @@ store.initStore();
 scrubFlagEnv();
 
 const app = express();
+app.disable("x-powered-by");
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Referrer-Policy", "same-origin");
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  next();
+});
 app.use(express.static(path.join(__dirname, "../public")));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

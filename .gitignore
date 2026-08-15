@@ -5,3 +5,4 @@ secret.txt
 scripts/staff-smoke.js
 fixed-vulnsite/
 .fixed-vulnsite/
+session-*.md

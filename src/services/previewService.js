@@ -3,6 +3,62 @@ const net = require("net");
 const http = require("http");
 const https = require("https");
 
+// Parse an IPv6 literal into its 16 raw bytes (or null if malformed).
+// Handles "::" compression and trailing dotted-quad notation so exotic
+// encodings like 0:0:0:0:0:ffff:7f00:1 normalize to the same bytes as
+// ::ffff:127.0.0.1.
+function ipv6ToBytes(ip6) {
+  const s = ip6.toLowerCase();
+  const dc = s.indexOf("::");
+  const head = dc !== -1 ? s.slice(0, dc) : s;
+  const tail = dc !== -1 ? s.slice(dc + 2) : null;
+
+  const parsePart = (part) => {
+    if (!part) return [];
+    const groups = part.split(":");
+    const last = groups[groups.length - 1];
+    if (last.includes(".")) {
+      const parts = last.split(".").map(Number);
+      if (parts.length !== 4 || parts.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return null;
+      groups.pop();
+      groups.push(String((parts[0] << 8) | parts[1]), String((parts[2] << 8) | parts[3]));
+    }
+    const bytes = [];
+    for (const g of groups) {
+      if (!/^[0-9a-f]{1,4}$/.test(g)) return null;
+      const n = parseInt(g, 16);
+      bytes.push((n >> 8) & 0xff, n & 0xff);
+    }
+    return bytes;
+  };
+
+  if (tail === null) {
+    const out = parsePart(head);
+    return out && out.length === 16 ? out : null;
+  }
+  const a = parsePart(head);
+  const b = parsePart(tail);
+  if (a === null || b === null) return null;
+  if (a.length + b.length > 16) return null;
+  const out = a.concat(new Array(16 - a.length - b.length).fill(0)).concat(b);
+  return out.length === 16 ? out : null;
+}
+
+// If an IPv6 address embeds an IPv4 address (IPv4-mapped ::ffff:a.b.c.d,
+// IPv4-compatible ::a.b.c.d, or their hex/expanded spellings), return the
+// dotted-quad IPv4 so it can be checked — otherwise null.
+function embeddedIpv4(bytes) {
+  if (!bytes || bytes.length !== 16) return null;
+  const first80Zero =
+    bytes[0] === 0 && bytes[1] === 0 && bytes[2] === 0 && bytes[3] === 0 &&
+    bytes[4] === 0 && bytes[5] === 0 && bytes[6] === 0 && bytes[7] === 0 &&
+    bytes[8] === 0 && bytes[9] === 0;
+  const mapped = first80Zero && bytes[10] === 0xff && bytes[11] === 0xff;
+  const compatible = first80Zero && bytes[10] === 0 && bytes[11] === 0;
+  if (!mapped && !compatible) return null;
+  return `${bytes[12]}.${bytes[13]}.${bytes[14]}.${bytes[15]}`;
+}
+
 // Blocks SSRF to loopback / private / link-local ranges — including the
 // 169.254.169.254 cloud metadata address and the app's own internal routes.
 function isBlockedIp(ip) {
@@ -22,7 +78,12 @@ function isBlockedIp(ip) {
     if (lower === "::1") return true; // loopback
     if (lower.startsWith("fe80:")) return true; // link-local
     if (lower.startsWith("fc") || lower.startsWith("fd")) return true; // unique local
-    if (lower.startsWith("::ffff:")) return isBlockedIp(lower.slice(7)); // mapped IPv4
+    // Any textual encoding of an IPv4-mapped / IPv4-compatible address
+    // (::ffff:a.b.c.d, ::ffff:0:a.b.c.d, hex or fully expanded spellings)
+    // must be checked against the embedded IPv4 — a plain prefix match on
+    // the string would let e.g. [0:0:0:0:0:ffff:7f00:1] reach loopback.
+    const embedded = embeddedIpv4(ipv6ToBytes(lower));
+    if (embedded) return isBlockedIp(embedded);
     return false;
   }
   return true; // unresolvable / unknown — fail closed

@@ -1,3 +1,4 @@
+const crypto = require("crypto");
 const store = require("../store");
 
 function getPublicProfile(id) {
@@ -35,10 +36,20 @@ function getProfileForApi(targetId, requestingUser) {
 
 function authenticate(username, password) {
   const user = store.findUserByUsername(username);
-  if (!user || user.password !== password) {
-    return null;
+  if (!user) return null;
+  // Salted SHA-256 comparison — no plaintext passwords stored at rest.
+  if (user.passwordHash && user.passwordSalt) {
+    const attempt = crypto
+      .createHash("sha256")
+      .update(user.passwordSalt + (password || ""))
+      .digest("hex");
+    return attempt === user.passwordHash ? user : null;
   }
-  return user;
+  // Fallback for any legacy entry that still has a plaintext field
+  if (user.password && user.password === password) {
+    return user;
+  }
+  return null;
 }
 
 module.exports = {

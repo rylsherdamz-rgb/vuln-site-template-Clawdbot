@@ -2,7 +2,8 @@
   {
     "id": 1,
     "username": "alice.admin",
-    "password": "admin2024",
+    "passwordHash": "ceb622a14001abd84d17a79fc3d5dc81d96253157d8fa2e9761da49a6756d219",
+    "passwordSalt": "cc2f9ed6ec8b581082f407bcef94ad0c",
     "fullName": "Alice Admin",
     "email": "alice@acmeshop.internal",
     "role": "ADMINISTRATOR",
@@ -32,7 +33,8 @@
   {
     "id": 2,
     "username": "bob.shopper",
-    "password": "shopper123",
+    "passwordHash": "0c54b50d69ba8f854464f01fa4c07ac097e1104f3578ae18ab7a11fdd8d1a08e",
+    "passwordSalt": "466782b6225f9b26659dc715597e0b83",
     "fullName": "Bob Shopper",
     "email": "bob@example.com",
     "role": "CUSTOMER",
