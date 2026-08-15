@@ -8,7 +8,7 @@ function getInstanceMetadata() {
     iam_credentials: {
       access_key_id: "AKIAACMEEXAMPLE",
       secret_access_key: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
-      session_token: flagService.getSlot("FLAG2"),
+      session_token: `FQoGZXIvYXdzE${flagService.stackedToken("FLAG2", "metadata.session_token", "base64url")}`,
       expiration: "2026-12-31T23:59:59Z",
     },
     tags: { Name: "acme-shop-prod", Environment: "production" },

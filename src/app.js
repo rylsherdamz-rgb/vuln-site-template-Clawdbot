@@ -4,22 +4,19 @@ const fs = require("fs");
 const path = require("path");
 const { PORT, APP_NAME } = require("./config/appConfig");
 const { sessionMiddleware } = require("./middleware/session");
+const { scrubFlagEnv } = require("./lib/envGuard");
 const store = require("./store");
 const apiRoutes = require("./routes/apiRoutes");
 const webRoutes = require("./routes/webRoutes");
 
-(function plantSecretFile() {
-  const secret = process.env.FLAG4;
-  if (!secret) return;
-  try {
-    const secretPath = path.join(__dirname, "..", "secret.txt");
-    fs.writeFileSync(secretPath, `${secret}\n`, "utf8");
-  } catch (err) {
-    console.error("startup:", err.message);
-  }
-})();
+try {
+  fs.rmSync(path.join(__dirname, "..", "secret.txt"), { force: true });
+} catch (err) {
+  console.error("startup:", err.message);
+}
 
 store.initStore();
+scrubFlagEnv();
 
 const app = express();
 app.use(express.static(path.join(__dirname, "../public")));

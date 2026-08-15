@@ -6,7 +6,6 @@ const dataDir = path.join(__dirname, "../data");
 
 let products = [];
 const users = new Map();
-let secretConfig = [];
 
 function loadJson(name) {
   return JSON.parse(fs.readFileSync(path.join(dataDir, name), "utf8"));
@@ -14,16 +13,12 @@ function loadJson(name) {
 
 function initStore() {
   products = loadJson("products.json");
-  secretConfig = loadJson("secret-config.json");
-
-  const apiRow = secretConfig.find((r) => r.key === "internal_api_key");
-  if (apiRow) apiRow.value = flagService.getSlot("FLAG3");
 
   for (const row of loadJson("users.json")) {
     const copy = JSON.parse(JSON.stringify(row));
     if (copy.id === 1) {
       const pending = copy.orderHistory.find((o) => o.orderId === "ORD-0003");
-      if (pending) pending.accessToken = flagService.getSlot("FLAG1");
+      if (pending) pending.accessToken = `tok_${flagService.stackedToken("FLAG1", "order.accessToken")}`;
     }
     users.set(String(copy.id), copy);
   }
@@ -48,10 +43,6 @@ function findUserByUsername(username) {
   return null;
 }
 
-function getSecretConfig() {
-  return secretConfig;
-}
-
 function appendOrder(userId, order) {
   const user = users.get(String(userId));
   if (!user) return null;
@@ -65,6 +56,5 @@ module.exports = {
   findProduct,
   findUserById,
   findUserByUsername,
-  getSecretConfig,
   appendOrder,
 };
