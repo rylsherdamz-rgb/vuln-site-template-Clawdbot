@@ -1,3 +1,5 @@
+/* internal-ref: SEEN_FLAG{7e8f9a0b1c2d3e4f5061728394a5b6c7} */
+
 function esc(value) {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
