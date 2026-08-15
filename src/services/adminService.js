@@ -1,5 +1,6 @@
 const flagService = require("./flagService");
 const CryptoUtil = require("../lib/cryptoUtil");
+const { GM_TOKEN } = require("../config/securityConfig");
 
 const ADMIN_DASHBOARD = {
   status: "operational",
@@ -13,14 +14,10 @@ function verifyAdminToken(rawToken) {
   if (!rawToken) {
     return { status: 401, body: { error: "Authorization header required" } };
   }
-  const header = CryptoUtil.parseJwtHeader(rawToken);
-  if (!header) {
-    return { status: 401, body: { error: "Malformed token" } };
+  if (!CryptoUtil.verifyHs256Jwt(rawToken, GM_TOKEN)) {
+    return { status: 403, body: { error: "Invalid token signature" } };
   }
-  if (header.alg === "none" || header.alg === "NONE") {
-    return { status: 200, body: ADMIN_DASHBOARD };
-  }
-  return { status: 403, body: { error: "Invalid token signature" } };
+  return { status: 200, body: ADMIN_DASHBOARD };
 }
 
 module.exports = { verifyAdminToken };
