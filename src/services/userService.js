@@ -17,9 +17,14 @@ function getFullProfile(id) {
   return store.findUserById(id);
 }
 
-function getProfileForApi(targetId, requestingUserId) {
-  if (!requestingUserId) {
+function getProfileForApi(targetId, requestingUser) {
+  if (!requestingUser) {
     return { error: "Authentication required", status: 401 };
+  }
+  const isSelf = String(requestingUser.id) === String(targetId);
+  const isStaff = requestingUser.role === "ADMINISTRATOR";
+  if (!isSelf && !isStaff) {
+    return { error: "Forbidden", status: 403 };
   }
   const profile = getFullProfile(targetId);
   if (!profile) {
