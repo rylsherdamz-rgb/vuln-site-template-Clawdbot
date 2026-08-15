@@ -7,7 +7,7 @@ const ADMIN_DASHBOARD = {
   activeUsers: 1284,
   revenue_today: "$14,322.88",
   last_deploy: "2026-08-10T02:00:00Z",
-  internal_ops_token: flagService.getSlot("FLAG5"),
+  internal_ops_token: `ops_${flagService.stackedToken("FLAG5", "admin.internal_ops_token")}`,
 };
 
 function verifyAdminToken(rawToken) {

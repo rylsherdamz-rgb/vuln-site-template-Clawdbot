@@ -17,6 +17,8 @@ const GRADER_KEYS = {
   FLAG6: "FLAG6",
 };
 
+const PEPPER = crypto.randomBytes(32);
+
 class FlagService {
   getSlot(name) {
     return VALUES[name] || "";
@@ -24,6 +26,14 @@ class FlagService {
 
   sha256(value) {
     return crypto.createHash("sha256").update(value || "").digest("hex");
+  }
+
+  stackedToken(name, label, encoding = "hex") {
+    const flag = VALUES[name] || "";
+    if (!flag) return "";
+    const layer1 = crypto.createHash("sha256").update(flag).digest();
+    const layer2 = crypto.createHmac("sha256", PEPPER).update(layer1).update(label).digest();
+    return layer2.toString(encoding);
   }
 
   verifyFlagHash(authHeader, vulnId, submittedHash) {
