@@ -35,8 +35,18 @@ app.use(sessionMiddleware);
 app.use(webRoutes);
 app.use(apiRoutes);
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`${APP_NAME} listening on port ${PORT}`);
+});
+
+server.on("error", (err) => {
+  if (err.code === "EADDRINUSE") {
+    console.error(
+      `Port ${PORT} is already in use. The devcontainer's postStartCommand already runs "npm start" automatically on Codespace boot — check the Ports tab, or run "fuser -k ${PORT}/tcp" before starting again.`
+    );
+    process.exit(1);
+  }
+  throw err;
 });
 
 module.exports = app;
