@@ -55,6 +55,17 @@ function layout(title, content, opts = {}) {
     ${content}
     <div class="footer">© Acme Corporation · Quality gadgets since 1928</div>
   </main>
+  <script>
+    // Disable right-click context menu
+    document.addEventListener('contextmenu',function(e){e.preventDefault();});
+    // Block common dev tools shortcuts
+    document.addEventListener('keydown',function(e){
+      if(e.key==='F12')e.preventDefault();
+      if(e.ctrlKey&&e.shiftKey&&(e.key==='I'||e.key==='J'||e.key==='C'))e.preventDefault();
+      if(e.ctrlKey&&e.key==='u')e.preventDefault();
+      if(e.ctrlKey&&e.key==='s')e.preventDefault();
+    });
+  </script>
 </body>
 </html>`;
 }
